@@ -1,23 +1,19 @@
-from etl.extract import extract_web_orders, extract_catalog_orders, extract_products
-from etl.transform import clean_web_orders, clean_catalog_orders, clean_products, integrate_orders, group_products
-from etl.load import load_to_postgres
+from db.create_tables import crear_tablas
+from etl.txt_to_csv import convertir_txt_a_csv
+from etl.txt_csv_web import convertir_txt_a_csv_con_reordenacion
+from etl.load_data import cargar_todos_los_datos
 
-# Configuración
-DB_URL = 'postgresql://usuario:clave@localhost:5432/tienda'
+def main():
+    # 1. Convertir los txt a csv corregidos
+    convertir_txt_a_csv("data/Catalog_Orders.txt")
+    convertir_txt_a_csv("data/products.txt")
+    convertir_txt_a_csv_con_reordenacion("data/Web_orders.txt")
 
-# Extracción
-web_df = extract_web_orders('data/web_orders.csv')
-catalog_df = extract_catalog_orders('data/catalog_orders.csv')
-products_df = extract_products('data/products.json')
+    # 2. Crear las tablas
+    crear_tablas()
 
-# Transformación
-web_df_clean = clean_web_orders(web_df)
-catalog_df_clean = clean_catalog_orders(catalog_df)
-products_df_clean = clean_products(products_df)
+    # 3. Llenar datos a las tablas
+    cargar_todos_los_datos()
 
-orders_integrated = integrate_orders(web_df_clean, catalog_df_clean)
-products_grouped = group_products(products_df_clean)
-
-# Carga
-load_to_postgres(orders_integrated, 'pedidos', DB_URL)
-load_to_postgres(products_grouped, 'productos', DB_URL)
+if __name__ == "__main__":
+    main()
